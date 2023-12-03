@@ -25,9 +25,9 @@ const corsOptions = {
 app.use(cors(corsOptions))
 app.use(express.json())
 
-//Rutas de trabajo
-app.post('/new-user', (req, res) => {
-    let{ nombre, apaterno, amaterno, email, telefono, password} = req.body
+//Ruta de doctores
+app.post('/new-doctor', (req, res) => {
+    let{ nombre, apaterno, amaterno, email, telefono, especialidad , fecha_nacimiento , password} = req.body
 
     if(!nombre.length){
         res.json({
@@ -41,18 +41,32 @@ app.post('/new-user', (req, res) => {
         res.json({
             'alert': 'No se ingreso el usuario'
         })
-    } else if (!password.length){
+    } else if (!telefono.length){
+        res.json({
+            'alert': 'No se ingreso el telefono'
+        })
+    } else if (!especialidad.length){
+        res.json({
+            'alert': 'No se ingreso la especialidad'
+        })
+    }
+    else if (!fecha_nacimiento.length){
+        res.json({
+            'alert': 'No se ingreso el dia de nacimiento'
+        })
+    }
+    else if (!password.length){
         res.json({
             'alert': 'No se ingreso el password'
         })
     }
 
-    const usuarios = collection(db, 'usuarios')
+    const clinica = collection(db, 'clinica')
 
-    getDoc(doc(usuarios, email)).then(user => {
+    getDoc(doc(clinica, email)).then(user => {
         if (user.exists()) {
             res.json({
-                'alert': 'El usuario ya existe'
+                'alert': 'El doctor ya existe'
             })
         } else {
             //Encryptar la contraseña 
@@ -67,7 +81,7 @@ app.post('/new-user', (req, res) => {
                         password: hash 
                     }
 
-                    setDoc(doc(usuarios, email), data).then(data => {
+                    setDoc(doc(clinica, email), data).then(data => {
                         res.json({
                             'alert': 'success', 
                             data
@@ -82,18 +96,18 @@ app.post('/new-user', (req, res) => {
         })
     })
 })
-app.get('/get-users', async (req, res) => {
+app.get('/get-doctor', async (req, res) => {
     try {
-        const usuarios = []; 
-        const data = await collection(db, 'usuarios')
+        const clinica = []; 
+        const data = await collection(db, 'doctor')
         const docs = await getDocs(data)
         docs.forEach((doc) => {
-            usuarios.push(doc.data())            
+            doctor.push(doc.data())            
         })
-        console.log('@@hola', usuarios)
+        console.log('@@hola', doctor)
         res.json({
             'alert': 'success', 
-            usuarios
+            doctor
         })
     } catch {
         res.json({
@@ -102,9 +116,9 @@ app.get('/get-users', async (req, res) => {
         })
     }
 })
-app.post('/delete-user', (req , res) => {
+app.post('/delete-doctor', (req , res) => {
     const email = req.body.email
-    deleteDoc(doc(collection(db, 'usuarios'), email))
+    deleteDoc(doc(collection(db, 'clinica'), email))
     .then(data => {
         res.json ({
             'alert': 'success'
@@ -118,14 +132,16 @@ app.post('/delete-user', (req , res) => {
     })
 })
 
-app.post('/edit-user', async (req , res) => {
-    const {nombre , apaterno , amaterno , telefono , password , email } = req.body
+app.post('/edit-doctor', async (req , res) => {
+    const {nombre, apaterno, amaterno, email, telefono, especialidad , fecha_nacimiento , password } = req.body
     
-    const edited = await updateDoc(doc(db, 'usuarios', email), {
+    const edited = await updateDoc(doc(db, 'clinica', email), {
         nombre,
         apaterno,
         amaterno,
-        telefono
+        telefono,
+        especialidad,
+        fecha_nacimiento,
     })
 
     res.json ({
@@ -133,6 +149,8 @@ app.post('/edit-user', async (req , res) => {
         edited
     })
 })
+
+// Rutas para pacientes
 
 //Poner el servidor en  modo escucha 
 app.listen(5000, () => {
